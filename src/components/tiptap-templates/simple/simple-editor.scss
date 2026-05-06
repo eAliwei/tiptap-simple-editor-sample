@@ -51,28 +51,36 @@ body,
 }
 
 .tiptap.ProseMirror {
-  font-family: "DM Sans", sans-serif;
+  font-family:Verdana,"游ゴシック",YuGothic,"ヒラギノ角ゴ ProN W3","Hiragino Kaku Gothic ProN","メイリオ",Meiryo,sans-serif;
 }
 
 .simple-editor-wrapper {
-  width: 100vw;
-  height: 100vh;
+
+  --tt-toolbar-bg-color:#f8f8f8;
+  --tt-toolbar-border-color:#d1d1d1;
+  width: 80vw;
+  height: 50vh;
+  margin: 0 auto;
   overflow: auto;
+    // border-inline: 1px solid var(--border);
+    border: 1px solid var(--tt-border-color);
 }
 
 .simple-editor-content {
-  max-width: 648px;
+  // max-width: 648px;
   width: 100%;
-  margin: 0 auto;
+  // margin: 0 auto;
   height: 100%;
   display: flex;
   flex-direction: column;
   flex: 1;
+  background-color: #8dace8;
 }
 
 .simple-editor-content .tiptap.ProseMirror.simple-editor {
   flex: 1;
-  padding: 3rem 3rem 30vh;
+
+  // padding: 3rem 3rem 30vh;
 }
 
 @media screen and (max-width: 480px) {

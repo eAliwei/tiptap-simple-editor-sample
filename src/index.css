@@ -1,5 +1,5 @@
-@import '../@/styles/_variables.scss';
-@import '../@/styles/_keyframe-animations.scss';
+@import '@/styles/_variables.scss';
+@import '@/styles/_keyframe-animations.scss';
 
 :root {
   --text: #6b6375;
@@ -54,7 +54,7 @@
 }
 
 #root {
-  width: 1126px;
+  /* width: 1126px;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
@@ -62,7 +62,7 @@
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  box-sizing: border-box; */
 }
 
 body {

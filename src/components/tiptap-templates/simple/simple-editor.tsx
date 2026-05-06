@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
+import { EditorContent, EditorContext, useEditor, type Content } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
@@ -13,6 +13,8 @@ import { Highlight } from "@tiptap/extension-highlight"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
+import { TextStyle } from '@tiptap/extension-text-style' // [!code ++]
+import { Color } from '@tiptap/extension-color' // [!code ++]
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -73,7 +75,41 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
-import content from "@/components/tiptap-templates/simple/data/content.json"
+import { Node } from '@tiptap/core'
+
+// import content from "@/components/tiptap-templates/simple/data/content.json"
+
+const EditorToolbar = ({ editor }) => {
+  if (!editor) return null
+
+  // 处理颜色变化的函数
+  const handleColorChange = (event) => {
+    const color = event.target.value
+    editor.chain().focus().setColor(color).run()
+  }
+
+  // 清除颜色的函数
+  const handleUnsetColor = () => {
+    editor.chain().focus().unsetColor().run()
+  }
+
+  // 获取当前选择的文字颜色
+  const currentColor = editor.getAttributes('textStyle').color || '#000000'
+
+  return (
+    <div className="toolbar">
+      <input
+        type="color"
+        onInput={handleColorChange}
+        value={currentColor}
+        aria-label="选择文字颜色"
+      />
+      <button onClick={handleUnsetColor}>
+        清除颜色
+      </button>
+    </div>
+  )
+}
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -86,7 +122,7 @@ const MainToolbarContent = ({
 }) => {
   return (
     <>
-      <Spacer />
+      {/* <Spacer /> */}
 
       <ToolbarGroup>
         <UndoRedoButton action="undo" />
@@ -113,6 +149,7 @@ const MainToolbarContent = ({
         <MarkButton type="strike" />
         <MarkButton type="code" />
         <MarkButton type="underline" />
+
         {!isMobile ? (
           <ColorHighlightPopover />
         ) : (
@@ -139,17 +176,17 @@ const MainToolbarContent = ({
 
       <ToolbarSeparator />
 
-      <ToolbarGroup>
+      {/* <ToolbarGroup>
         <ImageUploadButton text="Add" />
-      </ToolbarGroup>
+      </ToolbarGroup> */}
 
       <Spacer />
 
       {isMobile && <ToolbarSeparator />}
 
-      <ToolbarGroup>
+      {/* <ToolbarGroup>
         <ThemeToggle />
-      </ToolbarGroup>
+      </ToolbarGroup> */}
     </>
   )
 }
@@ -183,16 +220,37 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor() {
+interface SimpleEditorProps {
+  onChange?: (html: string) => void
+  content?: Content
+}
+
+export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
     "main"
   )
   const toolbarRef = useRef<HTMLDivElement>(null)
+  const CustomDiv = Node.create({
+    name: 'customDiv',
+    group: 'block',
+    content: 'inline*', // 允许包含文字、加粗、br等
+    parseHTML() {
+      return [{ tag: 'div' }]
+    },
+    renderHTML({ HTMLAttributes }) {
+      return ['div', HTMLAttributes, 0]
+    },
+  })
 
   const editor = useEditor({
     immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      if (onChange) {
+        onChange(editor.getHTML())
+      }
+    },
     editorProps: {
       attributes: {
         autocomplete: "off",
@@ -211,7 +269,17 @@ export function SimpleEditor() {
         },
       }),
       HorizontalRule,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      CustomDiv,
+      TextAlign.extend({
+        // 关键：在这里增加对 customDiv 的支持
+        types: ['heading', 'paragraph', 'customDiv'],
+      }).configure({
+        types: ['heading', 'paragraph', 'customDiv'],
+        alignments: ['left', 'center', 'right'],
+      }),
+      TextStyle, // [!code ++]
+      Color.configure({ types: ['textStyle'] }), // [!code ++]
+      // TextAlign.configure({ types: ["heading", "paragraph"] }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
@@ -220,13 +288,13 @@ export function SimpleEditor() {
       Superscript,
       Subscript,
       Selection,
-      ImageUploadNode.configure({
-        accept: "image/*",
-        maxSize: MAX_FILE_SIZE,
-        limit: 3,
-        upload: handleImageUpload,
-        onError: (error) => console.error("Upload failed:", error),
-      }),
+      // ImageUploadNode.configure({
+      //   accept: "image/*",
+      //   maxSize: MAX_FILE_SIZE,
+      //   limit: 3,
+      //   upload: handleImageUpload,
+      //   onError: (error) => console.error("Upload failed:", error),
+      // }),
     ],
     content,
   })
@@ -268,13 +336,15 @@ export function SimpleEditor() {
             />
           )}
         </Toolbar>
-
+        {/* <EditorToolbar editor={editor} /> */}
         <EditorContent
           editor={editor}
           role="presentation"
           className="simple-editor-content"
+
         />
       </EditorContext.Provider>
+
     </div>
   )
 }
