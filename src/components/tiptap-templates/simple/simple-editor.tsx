@@ -19,8 +19,8 @@ import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
 import { TextStyle } from "@tiptap/extension-text-style"
 import { Color } from "@tiptap/extension-color"
+import { Paragraph } from "@tiptap/extension-paragraph"
 import { FontSize } from "@/components/tiptap-extension/font-size-extension"
-
 // --- UI Primitives ---
 import { Spacer } from "@/components/tiptap-ui-primitive/spacer"
 import {
@@ -43,27 +43,12 @@ import { FontSizeDropdownMenu } from "@/components/tiptap-ui/font-size"
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
-import { Node } from "@tiptap/core"
-
 interface SimpleEditorProps {
   onChange?: (html: string) => void
   content?: Content
 }
 
 export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
-  const CustomDiv = Node.create({
-    name: "customDiv",
-    group: "block",
-    content: "inline*",
-    parseHTML() {
-      return [{ tag: "div" }]
-    },
-    renderHTML({ HTMLAttributes }) {
-      return ["div", HTMLAttributes, 0]
-    },
-  })
-
-
   const editor = useEditor({
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
@@ -82,17 +67,24 @@ export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
     },
     extensions: [
       StarterKit.configure({
+        paragraph: false,
         horizontalRule: false,
         link: {
           openOnClick: false,
           enableClickSelection: true,
         },
       }),
-
+      Paragraph.extend({
+        parseHTML() {
+          return [{ tag: "div" }, { tag: "p" }]
+        },
+        renderHTML({ HTMLAttributes }) {
+          return ["div", HTMLAttributes, 0]
+        },
+      }),
       HorizontalRule,
-      CustomDiv,
       TextAlign.configure({
-        types: ["heading", "paragraph", "customDiv"],
+        types: ["heading", "paragraph"],
         alignments: ["left", "center", "right"],
       }),
       TextStyle,

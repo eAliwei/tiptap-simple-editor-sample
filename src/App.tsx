@@ -3,6 +3,8 @@ import { useState } from 'react'
 export default function App() {
   const content = `<div style="text-align:center"><strong><span style="font-size:18px">お客様のメールアドレス<br />カート情報を送信いたします</span></strong></div><br /><span style="font-size:14px">この後、ご検討商品のカート情報をお送りいたしますのでご確認ください。<br />※送信には数分かかる場合があります。</span>`
 
+  // const content = `<span style="font-size:14px">この後、ご検討商品のカート情報をお送りいたしますのでご確認ください。<br />※送信には数分かかる場合があります。</span>`
+
   const [editorContent, setEditorContent] = useState(content)
   return (<>
     <h3>Tiptap editor sample</h3>
