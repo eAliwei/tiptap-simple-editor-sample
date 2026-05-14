@@ -1,5 +1,5 @@
 
-import { useEffect, type ChangeEvent } from "react"
+import { useEffect } from "react"
 import {
   EditorContent,
   EditorContext,
@@ -9,14 +9,7 @@ import {
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
-import { Image } from "@tiptap/extension-image"
-import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { TextAlign } from "@tiptap/extension-text-align"
-import { Typography } from "@tiptap/extension-typography"
-import { Highlight } from "@tiptap/extension-highlight"
-import { Subscript } from "@tiptap/extension-subscript"
-import { Superscript } from "@tiptap/extension-superscript"
-import { Selection } from "@tiptap/extensions"
 import { TextStyle } from "@tiptap/extension-text-style"
 import { Color } from "@tiptap/extension-color"
 import { Paragraph } from "@tiptap/extension-paragraph"
@@ -29,19 +22,44 @@ import {
   ToolbarSeparator,
 } from "@/components/tiptap-ui-primitive/toolbar"
 
-// --- Tiptap Node ---
-import { HorizontalRule } from "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
 import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
 // --- Tiptap UI ---
 import { MarkButton } from "@/components/tiptap-ui/mark-button"
 import { TextAlignButton } from "@/components/tiptap-ui/text-align-button"
 import { FontSizeDropdownMenu } from "@/components/tiptap-ui/font-size"
+import { TextColorPopover } from "@/components/tiptap-ui/text-color-popover"
 
 // --- Hooks ---
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
+
+const OrderedTextStyle = TextStyle.extend({
+  // Keep textStyle (<span>) inside semantic marks like <strong>.
+  priority: 90,
+})
+
+function rgbToHex(value: string) {
+  const channels = value
+    .split(",")
+    .slice(0, 3)
+    .map((part) => Number(part.trim()))
+
+  if (channels.length !== 3 || channels.some((channel) => Number.isNaN(channel))) {
+    return value
+  }
+
+  return `#${channels
+    .map((channel) => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, "0"))
+    .join("")}`
+}
+
+function normalizeHtmlColorToHex(html: string) {
+  return html.replace(/color:\s*rgba?\(([^)]+)\)/gi, (_, rgbValue: string) => {
+    return `color: ${rgbToHex(rgbValue)}`
+  })
+}
 
 interface SimpleEditorProps {
   onChange?: (html: string) => void
@@ -53,7 +71,7 @@ export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       if (onChange) {
-        onChange(editor.getHTML())
+        onChange(normalizeHtmlColorToHex(editor.getHTML()))
       }
     },
     editorProps: {
@@ -68,7 +86,6 @@ export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
     extensions: [
       StarterKit.configure({
         paragraph: false,
-        horizontalRule: false,
         link: {
           openOnClick: false,
           enableClickSelection: true,
@@ -82,38 +99,25 @@ export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
           return ["div", HTMLAttributes, 0]
         },
       }),
-      HorizontalRule,
       TextAlign.configure({
         types: ["heading", "paragraph"],
         alignments: ["left", "center", "right"],
       }),
-      TextStyle,
+      OrderedTextStyle,
       FontSize.configure({
-        types: ['textStyle'],  // 可选，配置哪些类型的节点可以使用
+        types: ["textStyle"],
       }),
       Color.configure({ types: ["textStyle"] }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Highlight.configure({ multicolor: true }),
-      Image,
-      Typography,
-      Superscript,
-      Subscript,
-      Selection,
     ],
     content,
   })
 
-  const currentColor = editor?.getAttributes("textStyle").color ?? "#000000"
-
-  const handleColorChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!editor) return
-
-    editor.chain().focus().setColor(event.target.value).run()
-  }
-
   useEffect(() => {
-    if (editor && content && content !== editor.getHTML()) {
+    if (
+      editor &&
+      content &&
+      content !== normalizeHtmlColorToHex(editor.getHTML())
+    ) {
       editor.commands.setContent(content)
     }
   }, [editor, content])
@@ -128,13 +132,7 @@ export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
             <MarkButton type="bold" />
             <MarkButton type="italic" />
             <MarkButton type="underline" />
-            <input
-              aria-label="文字颜色"
-              className="simple-editor-text-color"
-              onChange={handleColorChange}
-              type="color"
-              value={currentColor}
-            />
+            <TextColorPopover editor={editor} />
           </ToolbarGroup>
 
           <ToolbarSeparator />
