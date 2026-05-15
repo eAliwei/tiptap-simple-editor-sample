@@ -64,9 +64,10 @@ function normalizeHtmlColorToHex(html: string) {
 interface SimpleEditorProps {
   onChange?: (html: string) => void
   content?: Content
+  background?: string
 }
 
-export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
+export function SimpleEditor({ onChange, content, background = "#ffffff" }: SimpleEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
@@ -149,6 +150,7 @@ export function SimpleEditor({ onChange, content }: SimpleEditorProps) {
           editor={editor}
           role="presentation"
           className="simple-editor-content"
+          style={{ backgroundColor: background }}
         />
       </EditorContext.Provider>
     </div>
